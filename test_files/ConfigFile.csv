@@ -1,0 +1,7 @@
+Source Column Header,column_a,column_c,column_e,column_g
+Source Column Type,Text,Text,Number,DD/MM/YYYY
+Source Content,Stone,Ship,2500,1/1/2000
+Source Column Order,1,2,3,4
+Target Column Order,2,1,3,4
+Target Column Header,Vessel Type,Vessel Quality,Volume,Date
+Target Column Type,Text,Text,Number,D-MMM-YY
