@@ -1,0 +1,43 @@
+.drop-zone-container {
+  width: 100%;
+  height: 242px;
+  background-color: #e4e4e4;
+  color: #2e3344;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 3px;
+  font-family: sans-serif;
+  border: 1px solid #cccccc;
+  will-change: transform;
+  transition: transform 0.3s;
+}
+.drop-zone-container .drag-label {
+  font-family: sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.57;
+}
+.drop-zone-container .drag-limit {
+  line-height: 1.83;
+  color: #727891;
+  font-size: 12px;
+}
+.drop-zone-container .drag-files {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.drop-zone-container.hover {
+  transform: scale(0.95);
+}
+
+.drop-zone-container:hover {
+  cursor: pointer;
+}
+
+.drop-zone-container input {
+  display: none;
+}
