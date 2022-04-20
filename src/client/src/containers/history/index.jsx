@@ -17,7 +17,18 @@ const History = () => {
   const [configData, setConfigData] = useState('');
 
   const columns = [
-    { field: 'fileName', headerName: 'File name', width: 300 },
+    { 
+      field: 'fileName', headerName: 'File name', width: 300 ,
+      renderCell: (props) => {
+        const { row } = props;
+        const { fileName } = row
+        return (
+          <Chip label={fileName} variant="outlined" onClick={() => {
+            handleDataFileClick(fileName);
+          }} />
+        );
+      }
+    },
     {
       field: 'resultfile', headerName: 'Result file', width: 300,
       field: "Action", width: 150,
@@ -89,6 +100,11 @@ const History = () => {
     //console.log(settings);
   };
 
+
+  const handleDataFileClick = async (datafile) => {
+    console.log(datafile)
+    await downloadFile(datafile);
+  };
 
   const handleResultFileClick = async (resultfile) => {
     console.log(resultfile)

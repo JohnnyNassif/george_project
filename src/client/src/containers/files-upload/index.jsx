@@ -68,7 +68,9 @@ const FilesUpload = () => {
             const response = await postResultFile(configFileName, dataFileName);
             console.log(response);
             console.log('Calling the download api');
-            await downloadFile(dataFileName);
+            var resultfileshortname = dataFileName.substring(0, dataFileName.length - 4);
+            resultfileshortname +=  '-result.csv';
+            await downloadFile(resultfileshortname);
 
         } catch (error) {
             console.error(error);
@@ -89,6 +91,7 @@ const FilesUpload = () => {
         console.log(response);
         setAllConfigFiles(response);
         setSelectedConfigFile(response[0])
+        setConfigFileName(response[0])
     }, []);
 
     useEffect(() => {
