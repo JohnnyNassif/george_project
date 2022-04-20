@@ -180,28 +180,40 @@ async function ReOrderColumns(filename, dataFileFullNameResult) {
   const results = [];
   console.log('reading the data file before reordering columns');
   console.log(filename);
-  fs.createReadStream(filename)
-    .pipe(csv())
-    .on('data', (data) => results.push(data))
-    .on('end', () => {
-    });
 
-  let abc = csvToJson.fieldDelimiter(',').getJsonFromCsv(filename);
+  try {
+    if (fs.existsSync(filename)) {
+      fs.createReadStream(filename)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+        });
 
-  var orderedddata = Papa.unparse({
-    fields: newHeaders,
-    data: abc
-  });
+      let abc = csvToJson.fieldDelimiter(',').getJsonFromCsv(filename);
 
-  console.log('writing the columns in the new order');
-  await fs.writeFileSync(dataFileFullNameResult, orderedddata);
+      var orderedddata = Papa.unparse({
+        fields: newHeaders,
+        data: abc
+      });
 
-  console.log(newHeaders);
+      console.log('writing the columns in the new order');
+      await fs.writeFileSync(dataFileFullNameResult, orderedddata);
+
+      console.log(newHeaders);
 
 
-  var data = await fsPromises.readFile(dataFileFullNameResult, 'utf8');
-  var result = data.replace(sourceHeaderNames, targetHeaderNames);
-  await fsPromises.writeFile(dataFileFullNameResult, result);
+      var data = await fsPromises.readFile(dataFileFullNameResult, 'utf8');
+      var result = data.replace(sourceHeaderNames, targetHeaderNames);
+      await fsPromises.writeFile(dataFileFullNameResult, result);
+    }
+    else {
+      console.log('Data file not found....');
+    }
+  } catch (err) {
+    console.error(err)
+  }
+
+
 
 
   //Replace the first line, it means changing the headers to the new headers
@@ -399,64 +411,73 @@ router.post('/resultfile', async function (req, res, next) {
   // }
 
 
-  var newFieldsJson = [];
-  for (let i = 1; i < targetFieldsNames.length; i++) {
-    console.log(targetFieldsNames[i]);
-    newFieldsJson.push({ id: targetFieldsNames[i], title: targetFieldsNames[i] });
-  }
-
-  console.log(dataFileFullNameResult);
-  const csvWriter = createCsvWriter({
-    path: dataFileFullNameResult,
-    header: newFieldsJson,
-    alwaysQuote: false,
-  });
-
-  fs.createReadStream(dataFileFullNameResult)
-    .pipe(csv())
-    .on('data', (data) => inputCsvJsonToFormat.push(data))
-    .on('end', async () => {
-      modifiedCsvJsonToFormat = inputCsvJsonToFormat
-
-      console.log('...Done');
-      // console.log(modifiedCsvJsonToFormat);
-
-      // modifiedCsvJsonToFormat = modifiedCsvJsonToFormat.map((item) => {
-      //   const returnedItem = item
-      //   const itemKey = 'Date';
-      //   returnedItem[itemKey] = moment(item[itemKey]).format('D-MMM-YY');
-      //   return returnedItem
-      // })
-
-      for (let i = 1; i < targetFieldsTypes.length; i++) {
-        console.log(targetFieldsTypes[i]);
-        modifiedCsvJsonToFormat = modifiedCsvJsonToFormat.map((item) => {
-          const returnedItem = item
-          const itemKey = targetFieldsNames[i];
-          if (targetFieldsTypes[i] === 'Text') {
-            returnedItem[itemKey] = "'" + item[itemKey] + "'";
-          }
-          else if (targetFieldsTypes[i].includes('Y') || targetFieldsTypes[i].includes('y')) {
-            //console.log(item[itemKey]);
-            returnedItem[itemKey] = moment(item[itemKey]).format(targetFieldsTypes[i]);
-            //returnedItem[itemKey] = moment(item[itemKey],targetFieldsTypes[i]);
-            //returnedItem[itemKey] = item[itemKey];
-          }
-          else {
-            returnedItem[itemKey] = item[itemKey];
-          }
-          return returnedItem
-        })
+  try {
+    if (fs.existsSync(dataFileFullNameResult)) {
+      var newFieldsJson = [];
+      for (let i = 1; i < targetFieldsNames.length; i++) {
+        console.log(targetFieldsNames[i]);
+        newFieldsJson.push({ id: targetFieldsNames[i], title: targetFieldsNames[i] });
       }
 
-      csvWriter.writeRecords(modifiedCsvJsonToFormat)
-        .then(() => {
-          console.log('The CSV file (TO FORMAT) was written successfully!')
+      console.log(dataFileFullNameResult);
+      const csvWriter = createCsvWriter({
+        path: dataFileFullNameResult,
+        header: newFieldsJson,
+        alwaysQuote: false,
+      });
 
-          console.log('...Finished!');
+      fs.createReadStream(dataFileFullNameResult)
+        .pipe(csv())
+        .on('data', (data) => inputCsvJsonToFormat.push(data))
+        .on('end', async () => {
+          modifiedCsvJsonToFormat = inputCsvJsonToFormat
+
+          console.log('...Done');
+          // console.log(modifiedCsvJsonToFormat);
+
+          // modifiedCsvJsonToFormat = modifiedCsvJsonToFormat.map((item) => {
+          //   const returnedItem = item
+          //   const itemKey = 'Date';
+          //   returnedItem[itemKey] = moment(item[itemKey]).format('D-MMM-YY');
+          //   return returnedItem
+          // })
+
+          for (let i = 1; i < targetFieldsTypes.length; i++) {
+            console.log(targetFieldsTypes[i]);
+            modifiedCsvJsonToFormat = modifiedCsvJsonToFormat.map((item) => {
+              const returnedItem = item
+              const itemKey = targetFieldsNames[i];
+              if (targetFieldsTypes[i] === 'Text') {
+                returnedItem[itemKey] = item[itemKey];
+                //returnedItem[itemKey] = "'" + item[itemKey] + "'";
+              }
+              else if (targetFieldsTypes[i].includes('Y') || targetFieldsTypes[i].includes('y')) {
+                //console.log(item[itemKey]);
+                returnedItem[itemKey] = moment(item[itemKey]).format(targetFieldsTypes[i]);
+                //returnedItem[itemKey] = moment(item[itemKey],targetFieldsTypes[i]);
+                //returnedItem[itemKey] = item[itemKey];
+              }
+              else {
+                returnedItem[itemKey] = item[itemKey];
+              }
+              return returnedItem
+            })
+          }
+
+          csvWriter.writeRecords(modifiedCsvJsonToFormat)
+            .then(() => {
+              console.log('The CSV file (TO FORMAT) was written successfully!')
+
+              console.log('...Finished!');
+            });
+
         });
 
-    });
+
+    }
+  } catch (err) {
+    console.error(err)
+  }
 
 
   //await ProcessConfigFileNewMethod(configFileFullName, dataFileFullName, dataFileFullNameResult)
@@ -524,14 +545,19 @@ router.post("/downloadfile", async function (req, res, next) {
   fileLocation = path.join(__dirname, 'files/data', file);
   console.log(fileLocation);
   console.log(file);
-  var data = await fsPromises.readFile(fileLocation, 'utf8');
-  res.download(fileLocation, file, (err) => {
-    if (err) console.log(err);
-    else {
-      console.log('download succeeded');
-    }
 
-  });
+  if (fs.existsSync(fileLocation)) {
+    var data = await fsPromises.readFile(fileLocation, 'utf8');
+    res.download(fileLocation, file, (err) => {
+      if (err) console.log(err);
+      else {
+        console.log('download succeeded');
+      }
+
+    });
+  }
+
+
 });
 
 router.post("/downloadconfigfile", function (req, res, next) {
